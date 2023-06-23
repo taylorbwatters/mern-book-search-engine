@@ -4,36 +4,57 @@ const jwt = require('jsonwebtoken');
 const secret = 'mysecretsshhhhh';
 const expiration = '2h';
 
-module.exports = {
-  // function for our authenticated routes
-  authMiddleware: function (req, res, next) {
-    // allows token to be sent via  req.query or headers
-    let token = req.query.token || req.headers.authorization;
+function getTokenOffOfReq(req) {
+  // allows token to be sent via  req.query or headers
+  let token = req.query.token || req.headers.authorization;
 
-    // ["Bearer", "<tokenvalue>"]
-    if (req.headers.authorization) {
-      token = token.split(' ').pop().trim();
-    }
+  // ["Bearer", "<tokenvalue>"]
+  if (req.headers.authorization) {
+    token = token.split(' ').pop().trim();
+  }
 
-    if (!token) {
-      return res.status(400).json({ message: 'You have no token!' });
-    }
+  return token;
+}
 
+function checkToken(token) {
+  try {
     // verify token and get user data out of it
-    try {
-      const { data } = jwt.verify(token, secret, { maxAge: expiration });
-      req.user = data;
-    } catch {
-      console.log('Invalid token');
-      return res.status(400).json({ message: 'invalid token!' });
-    }
+    const { data } = jwt.verify(token, secret, { maxAge: expiration });
+    return data;
+  } catch (err) {
+    return null;
+  }
+}
+  
+  module.exports = {
+    // function for our authenticated routes
+    authMiddleware: function (req, res, next) {
+      const token = getTokenOffOfReq(req);
+      
+      if (!token) {
+        return res.status(400).json({ message: 'You have no token!' });
+      }
+      
+      const user = checkToken(token);
 
-    // send to next endpoint
-    next();
+      if (!user) {
+        console.log('Invalid token');
+        return res.status(400).json({ message: 'invalid token!' });
+      }
+
+      req.user = user;
+    
+      // send to next endpoint
+      next();
+  },
+  graphQLAuthMiddleware: function ({ req }) {
+    return { token: getTokenOffOfReq(req) }
   },
   signToken: function ({ username, email, _id }) {
     const payload = { username, email, _id };
 
     return jwt.sign({ data: payload }, secret, { expiresIn: expiration });
   },
+
+  checkToken,
 };
