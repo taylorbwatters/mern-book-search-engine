@@ -44,20 +44,18 @@ module.exports = {
         return { token, user };
     },
     addUser: async (parent, { username, email, password }, context) => {
-        if (!checkToken(context.token)) throw protectedError;
-
         const user = User.create({ username, email, password });
 
         const token = signToken(user);
         return { token, user };
     },
-    saveBook: async (parent, { title, bookId, image, link }, context) => {
+    saveBook: async (parent, args, context) => {
         const { _id } = checkToken(context.token) ?? {};
         if (!_id) throw protectedError;
 
         const updatedUser = await User.findOneAndUpdate(
             { _id },
-            { $addToSet: { savedBooks: { title, bookId, image, link } } },
+            { $addToSet: { savedBooks: args } },
             { new: true, runValidators: true }
         );
         if (!updatedUser) throw notFoundError;

@@ -22,6 +22,7 @@ function checkToken(token) {
     const { data } = jwt.verify(token, secret, { maxAge: expiration });
     return data;
   } catch (err) {
+    console.error(err);
     return null;
   }
 }

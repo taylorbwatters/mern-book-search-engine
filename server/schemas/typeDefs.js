@@ -8,8 +8,10 @@ const typeDefs = `#graphql
         addUser(username: String!, email: String!, password: String!): Auth
         
         saveBook(
-            title: String!
+            authors: [String]
+            description: String!
             bookId: String!
+            title: String!
             image: String!
             link: String!
         ): User

@@ -9,6 +9,7 @@ const { expressMiddleware } = require('@apollo/server/express4');
 const db = require('./config/connection');
 const routes = require('./routes');
 const { typeDefs, resolvers } = require('./schemas');
+const { graphQLAuthMiddleware } = require('./utils/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,7 +31,7 @@ const server = new ApolloServer({
 });
 
 server.start().then(() => {
-  app.use('/graphql', expressMiddleware(server));  
+  app.use('/graphql', expressMiddleware(server, { context: graphQLAuthMiddleware }));  
 
   // serve up react front-end in prod
   app.use((_, res) => {
